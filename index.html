@@ -350,14 +350,16 @@
             <div class="chart-container">
                 <h2 class="chart-title">Historical Data</h2>
                 <p class="chart-subtitle">Temperature and Humidity trends</p>
-                <canvas id="chart" class="chart-canvas"></canvas>
+                <div id="chart" class="chart-canvas" style="overflow: auto;">
+                    <div style="padding: 10px 16px;" id="data_list">
+                        
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwzr8405rwhLs9fOYd1htASi-cbierpXk-ZdhTvC-xgc0iu89JvKIRKl9cDVNiJO3LD/exec';
-
         const elements = {
             loading: document.getElementById('loading'),
             content: document.getElementById('content'),
@@ -372,190 +374,13 @@
             maxHumidity: document.getElementById('maxHumidity'),
             minHumidity: document.getElementById('minHumidity'),
             avgHumidity: document.getElementById('avgHumidity'),
-            chart: document.getElementById('chart').getContext('2d'),
+            chart: document.getElementById('chart')
         };
 
-        let chart = null;
-
-        async function fetchData() {
-            try {
-                elements.errorAlert.classList.add('hidden');
-                
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Accept': 'application/json',
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP Error: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('[v0] Data received:', data);
-
-                /*const tempValue = data.current?.temp || data.latest_temp || data.temp || '--';
-                const humidityValue = data.current?.humidity || data.latest_humidity || data.humidity || '--';
-                const maxTempVal = data.summary?.temp?.temp_max || data.max?.temp || data.max_temp || '--';
-                const minTempVal = data.summary?.temp?.temp_min || data.min?.temp || data.min_temp || '--';
-                const avgTempVal = data.summary?.temp?.temp_avg || data.avg?.temp || data.avg_temp || '--';
-                const maxHumidityVal = data.summary?.humidity?.hum_max || data.max?.humidity || data.max_humidity || '--';
-                const minHumidityVal = data.summary?.humidity?.hum_min || data.min?.humidity || data.min_humidity || '--';
-                const avgHumidityVal = data.summary?.humidity?.hum_avg || data.avg?.humidity || data.avg_humidity || '--';
-
-                const formatValue = (val) => {
-                    if (val === '--') return '--';
-                    return parseFloat(val).toFixed(1);
-                };*/
-
-                const now = new Date();
-                elements.lastUpdate.textContent = now.toLocaleTimeString('th-TH');
-
-                elements.loading.style.display = 'none';
-                elements.content.style.display = 'block';
-
-                if (data.all && data.all.length > 0) {
-                    updateChart(data.all);
-                } else if (data.history && data.history.length > 0) {
-                    updateChart(data.history);
-                } else if (data.field && data.field.length > 0) {
-                    updateChart(data.field);
-                }
-            } catch (error) {
-                console.error('[v0] Error fetching data:', error);
-                elements.loading.style.display = 'none';
-                elements.errorAlert.classList.remove('hidden');
-                elements.errorMessage.textContent = `Error: ${error.message}. โปรดตรวจสอบว่า Apps Script เป็น public หรือ CORS ถูกเปิดใช้งาน`;
-            }
-        }
-
-        function updateChart(data) {
-            const ctx = elements.chart;
-            
-            const labels = data.map((item, idx) => {
-                if (item.time) return item.time;
-                const hours = Math.floor(idx / 60);
-                const mins = idx % 60;
-                return `${hours}:${mins.toString().padStart(2, '0')}`;
-            });
-
-            const tempData = data.map(item => {
-                const temp = item.temp || item.temperature || item.Temp;
-                return typeof temp === 'string' ? parseFloat(temp) : temp;
-            });
-
-            const humidityData = data.map(item => {
-                const hum = item.humidity || item.Humidity || item.hum;
-                return typeof hum === 'string' ? parseFloat(hum) : hum;
-            });
-
-            if (chart) {
-                chart.destroy();
-            }
-
-            chart = new Chart(ctx.canvas, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Temperature (°C)',
-                            data: tempData,
-                            borderColor: '#00d4ff',
-                            backgroundColor: 'rgba(0, 212, 255, 0.1)',
-                            borderWidth: 2,
-                            fill: false,
-                            tension: 0.4,
-                            pointRadius: 0,
-                            pointHoverRadius: 6,
-                            pointBackgroundColor: '#00d4ff',
-                            yAxisID: 'y',
-                        },
-                        {
-                            label: 'Humidity (%)',
-                            data: humidityData,
-                            borderColor: '#0ea5e9',
-                            backgroundColor: 'rgba(14, 165, 233, 0.1)',
-                            borderWidth: 2,
-                            fill: false,
-                            tension: 0.4,
-                            pointRadius: 0,
-                            pointHoverRadius: 6,
-                            pointBackgroundColor: '#0ea5e9',
-                            yAxisID: 'y1',
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                color: '#a8a8a8',
-                                font: { size: 12 },
-                                usePointStyle: true,
-                                padding: 15,
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                            borderColor: '#00d4ff',
-                            borderWidth: 1,
-                            titleColor: '#ffffff',
-                            bodyColor: '#a8a8a8',
-                            padding: 10,
-                            displayColors: true,
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            ticks: { color: '#888' },
-                            grid: { color: 'rgba(75, 85, 99, 0.1)' },
-                            title: {
-                                display: true,
-                                text: 'Temperature (°C)',
-                                color: '#00d4ff',
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            ticks: { color: '#888' },
-                            grid: { drawOnChartArea: false },
-                            title: {
-                                display: true,
-                                text: 'Humidity (%)',
-                                color: '#0ea5e9',
-                            }
-                        },
-                        x: {
-                            ticks: { color: '#888' },
-                            grid: { color: 'rgba(75, 85, 99, 0.1)' },
-                        }
-                    }
-                }
-            });
-        }
-
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-        script.onload = () => {
-            fetchData();
-            setInterval(fetchData, 30000);
-        };
-        document.head.appendChild(script);
+        setTimeout(function() {
+            elements.loading.style.display = 'none';
+            elements.content.style.display = 'block';
+        }, 1500)
     </script>
     <script src="getData.js"></script>
 </body>
