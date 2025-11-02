@@ -12,6 +12,9 @@ async function loadData() {
     elements.maxHumidity.textContent = events[6].toFixed(2) + '%'
     elements.minHumidity.textContent = events[7].toFixed(2) + '%'
     elements.avgHumidity.textContent = events[5].toFixed(2) + '%'
+
+    setTimeout(loadData, 2000)
 }
+
 
 loadData()
