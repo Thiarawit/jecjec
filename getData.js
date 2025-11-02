@@ -4,14 +4,14 @@ async function loadData() {
     )
     const events = await response.json()
 
-    elements.tempValue.textContent = events[0] + '°C'
-    elements.humidityValue.textContent = events[1] + '%'
-    elements.maxTemp.textContent = events[3] + '°C'
-    elements.minTemp.textContent =events[4] + '°C'
-    elements.avgTemp.textContent = events[2] + '°C'
-    elements.maxHumidity.textContent = events[6] + '%'
-    elements.minHumidity.textContent = events[7] + '%'
-    elements.avgHumidity.textContent = events[5] + '%'
+    elements.tempValue.textContent = events[0].toFixed(2) + '°C'
+    elements.humidityValue.textContent = events[1].toFixed(2) + '%'
+    elements.maxTemp.textContent = events[3].toFixed(2) + '°C'
+    elements.minTemp.textContent =events[4].toFixed(2) + '°C'
+    elements.avgTemp.textContent = events[2].toFixed(2) + '°C'
+    elements.maxHumidity.textContent = events[6].toFixed(2) + '%'
+    elements.minHumidity.textContent = events[7].toFixed(2) + '%'
+    elements.avgHumidity.textContent = events[5].toFixed(2) + '%'
 }
 
 loadData()
